@@ -1,9 +1,5 @@
 name: Adhoc
-on:
-  push:
-    tags:
-      - 'v*.*.*-*'
-      - '!v*.*.*'
+on: push
 jobs:
   adhoc:
     runs-on: windows-latest
