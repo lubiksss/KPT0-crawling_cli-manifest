@@ -1,0 +1,60 @@
+name: Adhoc
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - '!v*.*.*-*'
+jobs:
+  adhoc:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        keys: [ '기프트_5-6', '상패_3-4' ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 14
+      - run: npm ci
+      - if: ${{ always() }}
+        run: uname -a
+      - if: ${{ always() }}
+        run: npm run start ${{matrix.keys}}
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: result
+          path: './test/*.xlsx'
+          retention-days: 1
+
+  adhoc-noti-success:
+    needs: adhoc
+    if: ${{ always() && contains(needs.adhoc.result, 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Adhoc Success
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            Author: ${{github.actor}}
+            Status: 😚 **Success**
+            Action: https://github.com/${{ github.repository }}/actions
+            **Adhoc**
+
+  adhoc-noti-fail:
+    needs: adhoc
+    if: ${{ always() && contains(needs.adhoc.result, 'fail') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Adhoc Failure
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            Author: ${{github.actor}}
+            Status: 😱 **Failure**
+            Action: https://github.com/${{ github.repository }}/actions
+            **Adhoc**
