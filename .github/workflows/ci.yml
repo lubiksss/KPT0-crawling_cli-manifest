@@ -2,22 +2,23 @@ name: Adhoc
 on:
   push:
     tags:
-      - 'v*.*.*'
-      - '!v*.*.*-*'
+      - 'v*.*.*-*'
+      - '!v*.*.*'
 jobs:
   adhoc:
     runs-on: windows-latest
     strategy:
       matrix:
-        keys: [ '기프트_5-6', '상패_3-4' ]
+        keys: [ 'key', 'word' ]
     steps:
       - uses: actions/checkout@v3
+        with:
+          repository: 'lubiksss/KPT0-crawling_cli-templ'
+          token: ${{ secrets.GH_TOKEN }}
       - uses: actions/setup-node@v3
         with:
           node-version: 14
       - run: npm ci
-      - if: ${{ always() }}
-        run: uname -a
       - if: ${{ always() }}
         run: npm run start ${{matrix.keys}}
       - if: ${{ always() }}
