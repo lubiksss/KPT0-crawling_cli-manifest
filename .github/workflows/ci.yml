@@ -48,7 +48,7 @@ jobs:
         with:
           name: result
           path: './test'
-      - run: node index.js
+      - run: node index.js test
       - uses: actions/upload-artifact@v3
         with:
           name: result
