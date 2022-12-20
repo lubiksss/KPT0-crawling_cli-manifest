@@ -22,7 +22,7 @@ jobs:
         uses: nick-fields/retry@v2
         with:
 #          continue_on_error: true
-          timeout_seconds: 5
+          timeout_minutes: 5
           max_attempts: 3
           command: npm run start ${{matrix.keys}}
       - if: ${{ always() }}
