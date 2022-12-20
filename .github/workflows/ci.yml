@@ -19,7 +19,12 @@ jobs:
           node-version: 14
       - run: npm ci
       - if: ${{ always() }}
-        run: npm run start ${{matrix.keys}}
+        uses: nick-fields/retry@v2
+        with:
+#          continue_on_error: true
+          timeout_seconds: 5
+          max_attempts: 3
+          command: npm run start ${{matrix.keys}}
       - if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
