@@ -8,6 +8,81 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        keys: [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '10' ]
+        keys: [ 'key', 'word' ]
     steps:
-      - run : curl https://api.ipify.org
+      - uses: actions/checkout@v3
+        with:
+          repository: 'lubiksss/KPT0-crawling_cli-templ'
+          token: ${{ secrets.GH_TOKEN }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 14
+      - run: npm ci
+      - if: ${{ always() }}
+        uses: nick-fields/retry@v2
+        with:
+#          continue_on_error: true
+          timeout_minutes: 5
+          max_attempts: 3
+          command: npm run start ${{matrix.keys}}
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: result
+          path: './test/*.xlsx'
+          retention-days: 1
+
+  collect:
+    runs-on: ubuntu-latest
+    needs: adhoc
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: 'lubiksss/KPT0-collecting-xlsx'
+          token: ${{ secrets.GH_TOKEN }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 14
+      - run: npm ci
+      - uses: actions/download-artifact@v3
+        with:
+          name: result
+          path: './test'
+      - run: node index.js test
+      - uses: actions/upload-artifact@v3
+        with:
+          name: result
+          path: './*.xlsx'
+          retention-days: 1
+
+  adhoc-noti-success:
+    needs: adhoc
+    if: ${{ always() && contains(needs.adhoc.result, 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Adhoc Success
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            Author: ${{github.actor}}
+            Status: 😚 **Success**
+            Action: https://github.com/${{ github.repository }}/actions
+            **Adhoc**
+
+  adhoc-noti-fail:
+    needs: adhoc
+    if: ${{ always() && contains(needs.adhoc.result, 'fail') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Adhoc Failure
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            Author: ${{github.actor}}
+            Status: 😱 **Failure**
+            Action: https://github.com/${{ github.repository }}/actions
+            **Adhoc**
