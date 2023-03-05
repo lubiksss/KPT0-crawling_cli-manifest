@@ -8,7 +8,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        keys: [ 'key', 'word' ]
+        keys: [ 'hello', 'world', 'hello', 'puppeteer' ]
     steps:
       - uses: actions/checkout@v3
         with:
